@@ -1,0 +1,43 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Poppins', sans-serif;
+    text-transform: capitalize;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid black;
+    width: 700px;
+    height: 500px;
+    margin-left: 500px;
+    margin-top: 200px;
+}
+.all{
+    text-align: center;
+}
+button{
+    width: 60px;
+    height: 40px;
+}
+.all-item{
+    margin-left: 20px;
+}
+.text{
+    background-color: antiquewhite;
+    width: 650px;
+    height: 50px;
+    margin-top: 20px;
+    margin-left: 20px;
+
+}
+
+#add{
+    background-color: blue;
+    color: white;
+    border-radius: 5px;
+}
+.work{
+    display: flex;
+}
