@@ -21,9 +21,7 @@ button{
     width: 60px;
     height: 40px;
 }
-.all-item{
-    margin-left: 20px;
-}
+
 .text{
     background-color: antiquewhite;
     width: 650px;
@@ -41,3 +39,53 @@ button{
 .work{
     display: flex;
 }
+
+  
+  .all-item {
+    margin: 0 auto;
+    width: 600px;
+  }
+  
+  .work {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .work label {
+    margin-left: 10px;
+  }
+
+  .detail button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .detail button i {
+    color: #007bff;
+  }
+  
+
+  .task-details {
+    display: flex;
+    align-items: center;
+  }
+  
+  .detail {
+    margin-left: auto;
+  }
+  
+  .completed {
+    text-decoration: line-through;
+    color: grey;
+  }
+
+  .edit-job-form button#editButton {
+    margin-top: 10px;
+  }
+  

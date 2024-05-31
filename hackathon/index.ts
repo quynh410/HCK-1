@@ -1,159 +1,161 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const checkboxes = document.querySelectorAll<HTMLInputElement>(".all-item input[type='checkbox']");
-  checkboxes.forEach(function (checkbox) {
-    checkbox.addEventListener("change", function () {
-      if (this.checked) {
-        // Thêm 
-        (this.nextElementSibling as HTMLElement).style.textDecoration = "line-through";
-      } else {
-        // Loại 
-        (this.nextElementSibling as HTMLElement).style.textDecoration = "none";
-      }
-    });
-  });
-});
+interface ITodoList {
+  id: number;
+  name: string;
+  completed: boolean;
+}
 
-//  ----------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  const checkboxes = document.querySelectorAll<HTMLInputElement>(".all-item input[type='checkbox']");
-  const scoreDisplay = document.getElementById("score") as HTMLBRElement;
+class TodoList {
+  private todoList: ITodoList[] = [];
+  private currentEditId: number | null = null;
 
-  let completedTasks = 0;
+  constructor() {
+    this.loadFromLocalStorage();
+    this.renderJob();
+  }
 
-  function updateCompletedTasks() {
-    scoreDisplay.textContent = `${completedTasks}/${checkboxes.length}`;
-    if (completedTasks === checkboxes.length) {
-      alert("Hoàn thành công việc");
+  private loadFromLocalStorage() {
+    const data = localStorage.getItem('todoList');
+    if (data) {
+      this.todoList = JSON.parse(data);
     }
   }
 
-  checkboxes.forEach((checkbox) => {
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        completedTasks++;
-      } else {
-        completedTasks--;
+  private saveToLocalStorage() {
+    localStorage.setItem('todoList', JSON.stringify(this.todoList));
+  }
+
+  public renderJob(): void {
+    const listElement = document.getElementById('taskList');
+    const scoreElement = document.getElementById('score');
+    if (listElement && scoreElement) {
+      listElement.innerHTML = '';
+      let completedCount = 0;
+      this.todoList.forEach((job) => {
+        const jobElement = document.createElement('div');
+        jobElement.className = 'work';
+
+        const jobContent = `
+          <div class="task-details">
+            <input type="checkbox" ${job.completed ? 'checked' : ''} onchange="todoList.updateJob(${job.id}, this.checked)" />
+            <label class="${job.completed ? 'completed' : ''}">${job.name}</label>
+          </div>
+          <div class="detail">
+            <button onclick="todoList.editJob(${job.id})">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="todoList.confirmDeleteJob(${job.id})" style="width: 30px; height: 30px">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        `;
+
+        jobElement.innerHTML = jobContent;
+        listElement.appendChild(jobElement);
+
+        if (job.completed) {
+          completedCount++;
+        }
+      });
+      scoreElement.innerHTML = `${completedCount}/${this.todoList.length}`;
+      
+      if (completedCount === this.todoList.length && this.todoList.length > 0) {
+        this.showDeleteConfirmation();
       }
-      updateCompletedTasks();
-    });
-  });
+    }
+  }
 
-  updateCompletedTasks();
-});
+  private showDeleteConfirmation(): void {
+    const confirmation = confirm('Tất cả công việc đã hoàn thành. Bạn có muốn xóa tất cả không?');
+    if (confirmation) {
+      this.todoList = [];
+      this.saveToLocalStorage();
+      this.renderJob();
+    }
+  }
 
-//  ----------------------------------------------------------------
+  public confirmDeleteJob(id: number): void {
+    const confirmation = confirm('Bạn có chắc chắn muốn xóa công việc này?');
+    if (confirmation) {
+      this.deleteJob(id);
+    }
+  }
 
-interface ITodoList {
-    id: number;
-    name: string;
-    completed: boolean;
-}
-
-class TodoList implements ITodoList {
-    id: number;
-    name: string;
-    completed: boolean;
-    todoList: ITodoList[];
-
-    constructor(todoList: ITodoList[]) {
-        this.todoList = todoList;
-        this.id = 0; 
-        this.name = "";
-        this.completed = false;
+  public createJob(name: string): void {
+    if (!name) {
+      alert('Tên công việc không được để trống');
+      return;
     }
 
-    renderJob(): void {
-        let elementRender= document.getElementById("render") as HTMLElement;
-        const myInput = document.getElementById('taskInput') as HTMLInputElement;
-        const inputValue = myInput.value;
-        let text="";
-        for (let index = 0; index < this.todoList.length; index++) {
-        text+=`
-        <div id="render"><input type="checkbox" />${inputValue}<label for="">Code</label></div>
-        <div class="detail" style="margin-left: 30pc;" >
-          <button style="width: 30px; height: 30px">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button style="width: 30px; height: 30px">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-        
-       
-        `
-        }
-        elementRender.innerHTML=text;
-       
-      };
+    if (this.todoList.some((job) => job.name === name)) {
+      alert('Tên công việc không được phép trùng');
+      return;
+    }
 
-     createJob() {
-        let newTask={
-            id: this.id,
-            name: this.name,
-            completed: this.completed
-        }
-         if (newTask.name.trim() === "") {
-             console.error("Tên công việc không được để trống");
-             return;
-         }
+    const newJob: ITodoList = {
+      id: Date.now(),
+      name,
+      completed: false,
+    };
+    this.todoList.push(newJob);
+    this.saveToLocalStorage();
+    this.renderJob();
+  }
 
-         if (this.todoList.some(task => task.name === newTask.name)) {
-             console.error("Tên công việc đã tồn tại");
-             return;
-         }
+  public updateJob(id: number, completed: boolean): void {
+const job = this.todoList.find((job) => job.id === id);
+    if (job) {
+      job.completed = completed;
+      this.saveToLocalStorage();
+      this.renderJob();
+    }
+  }
 
-         this.todoList.push(newTask);
-         
+  public updateJobName(id: number, name: string): void {
+    const job = this.todoList.find((job) => job.id === id);
+    if (job) {
+      job.name = name;
+      this.saveToLocalStorage();
+      this.renderJob();
+    }
+  }
 
-         localStorage.setItem("todoList", JSON.stringify(this.todoList));
+  public deleteJob(id: number): void {
+    this.todoList = this.todoList.filter((job) => job.id !== id);
+    this.saveToLocalStorage();
+    this.renderJob();
+  }
 
-         this.renderJob();
-     }
+  public editJob(id: number): void {
+    const job = this.todoList.find((job) => job.id === id);
+    if (job) {
+      const taskInput = document.getElementById('taskInput') as HTMLInputElement;
+      taskInput.value = job.name;
+      this.currentEditId = id;
+      this.updateButtonLabel('Sửa');
+    }
+  }
 
-     updateJob(taskId: number, completed: boolean) {
-//         const taskToUpdate = this.todoList.find(task => task.id === taskId);
+  private updateButtonLabel(label: string): void {
+    const addButton = document.getElementById('add') as HTMLButtonElement;
+    addButton.innerText = label;
+  }
 
-//         if (!taskToUpdate) {
-//             console.error("Không tìm thấy công việc cần cập nhật");
-//             return;
-//         }
-//         taskToUpdate.completed = completed;
+  public handleButtonClick(): void {
+    const taskInput = document.getElementById('taskInput') as HTMLInputElement;
+    const taskName = taskInput.value.trim();
+    if (this.currentEditId !== null) {
+      this.updateJobName(this.currentEditId, taskName);
+      this.currentEditId = null;
+      this.updateButtonLabel('Thêm');
+    } else {
+      this.createJob(taskName);
+    }
+    taskInput.value = '';
+  }
+}
 
-//         localStorage.setItem("todoList", JSON.stringify(this.todoList));
+const todoList = new TodoList();
 
-//         this.renderJob();
-     }
-
-     deleteJob(taskId: number) {
-        //  if (confirm("Bạn có chắc chắn muốn xóa công việc này không?")) {
-             this.todoList = this.todoList.filter(task => task.id !== taskId);
-             localStorage.setItem("todoList", JSON.stringify(this.todoList));
-             this.renderJob();
-         }
-     }
- 
-
- const savedTodoList = JSON.parse(localStorage.getItem("todoList") || "[]");
-
- const todoList = new TodoList(savedTodoList);
-
- const newTask: ITodoList = { id: 0, name: "Mua sữa", completed: false };
- todoList.createJob();
-
- todoList.updateJob(1, true);
-
- todoList.deleteJob(1);
-
- todoList.renderJob();
-
-
-
-let elementAdd= document.getElementById("add") as HTMLButtonElement;
- console.log(777777,elementAdd);
-
-elementAdd.addEventListener("click",()=>{
-  console.log(1111222);
-  
-  todoList.createJob();
-  todoList.renderJob();
-})
+document.getElementById('add')?.addEventListener('click', () => {
+  todoList.handleButtonClick();
+});
